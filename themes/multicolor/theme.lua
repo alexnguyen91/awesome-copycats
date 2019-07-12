@@ -17,7 +17,7 @@ local my_table = awful.util.table or gears.table -- 4.{0,1} compatibility
 local theme                                     = {}
 theme.confdir                                   = os.getenv("HOME") .. "/.config/awesome/themes/multicolor"
 theme.wallpaper                                 = theme.confdir .. "/wall.png"
-theme.font                                      = "xos4 Terminus 8"
+theme.font                                      = "Misc Tamsyn 8"
 theme.menu_bg_normal                            = "#000000"
 theme.menu_bg_focus                             = "#000000"
 theme.bg_normal                                 = "#000000"
@@ -103,7 +103,7 @@ mytextclock.font = theme.font
 theme.cal = lain.widget.cal({
     attach_to = { mytextclock },
     notification_preset = {
-        font = "xos4 Terminus 10",
+        font = "Misc Tamsyn 8",
         fg   = theme.fg_normal,
         bg   = theme.bg_normal
     }
@@ -112,8 +112,8 @@ theme.cal = lain.widget.cal({
 -- Weather
 local weathericon = wibox.widget.imagebox(theme.widget_weather)
 theme.weather = lain.widget.weather({
-    city_id = 2643743, -- placeholder (London)
-    notification_preset = { font = "xos4 Terminus 10", fg = theme.fg_normal },
+    city_id = 1566083,
+    notification_preset = { font = "Misc Tamsyn 8", fg = theme.fg_normal },
     weather_na_markup = markup.fontfg(theme.font, "#eca4c4", "N/A "),
     settings = function()
         descr = weather_now["weather"][1]["description"]:lower()
@@ -156,6 +156,18 @@ theme.mail = lain.widget.imap({
 })
 --]]
 
+redshift = wibox.widget.textbox()
+lain.widget.contrib.redshift:attach(
+    redshift,
+    function (active)
+        if active then
+            redshift:set_markup(markup.fontfg(theme.font, "#ffa500", "R "))
+        else
+            redshift:set_markup(markup.fontfg(theme.font, "#ffffff", "R "))
+        end
+    end
+)
+
 -- CPU
 local cpuicon = wibox.widget.imagebox(theme.widget_cpu)
 local cpu = lain.widget.cpu({
@@ -167,6 +179,7 @@ local cpu = lain.widget.cpu({
 -- Coretemp
 local tempicon = wibox.widget.imagebox(theme.widget_temp)
 local temp = lain.widget.temp({
+    tempfile = "/sys/devices/pci0000:00/0000:00:18.3/hwmon/hwmon1/temp1_input",
     settings = function()
         widget:set_markup(markup.fontfg(theme.font, "#f1af5f", coretemp_now .. "°C "))
     end
@@ -228,8 +241,8 @@ local mpdicon = wibox.widget.imagebox()
 theme.mpd = lain.widget.mpd({
     settings = function()
         mpd_notification_preset = {
-            text = string.format("%s [%s] - %s\n%s", mpd_now.artist,
-                   mpd_now.album, mpd_now.date, mpd_now.title)
+            text = string.format("Title:  %s\nArtist: %s\nAlbum:  %s", mpd_now.title,
+                   mpd_now.artist, mpd_now.album)
         }
 
         if mpd_now.state == "play" then
@@ -311,6 +324,7 @@ function theme.at_screen_connect(s)
             theme.volume.widget,
             memicon,
             memory.widget,
+            redshift,
             cpuicon,
             cpu.widget,
             --fsicon,
@@ -319,8 +333,6 @@ function theme.at_screen_connect(s)
             theme.weather.widget,
             tempicon,
             temp.widget,
-            baticon,
-            bat.widget,
             clockicon,
             mytextclock,
         },

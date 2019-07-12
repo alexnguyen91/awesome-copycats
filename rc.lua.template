@@ -1,7 +1,6 @@
 --[[
 
      Awesome WM configuration template
-     github.com/lcpz
 
 --]]
 
@@ -57,7 +56,7 @@ local function run_once(cmd_arr)
     end
 end
 
-run_once({ "urxvtd", "unclutter -root" }) -- entries must be separated by commas
+run_once({ "urxvtd", "unclutter -root", "fcitx", "xscreensaver -no-splash" })
 
 -- This function implements the XDG autostart specification
 --[[
@@ -97,13 +96,14 @@ local guieditor    = "atom"
 local scrlocker    = "slock"
 
 awful.util.terminal = terminal
-awful.util.tagnames = { "1", "2", "3", "4", "5" }
+awful.util.tagnames = { "term", "web", "chat", "asianux", "files", "other" }
 awful.layout.layouts = {
-    awful.layout.suit.floating,
     awful.layout.suit.tile,
-    awful.layout.suit.tile.left,
-    awful.layout.suit.tile.bottom,
-    awful.layout.suit.tile.top,
+    awful.layout.suit.max,
+    awful.layout.suit.max,
+    awful.layout.suit.tile,
+    awful.layout.suit.tile,
+    awful.layout.suit.floating,
     --awful.layout.suit.fair,
     --awful.layout.suit.fair.horizontal,
     --awful.layout.suit.spiral,
@@ -263,6 +263,11 @@ globalkeys = my_table.join(
               {description = "lock screen", group = "hotkeys"}),
 
     -- Hotkeys
+    -- Lock screen
+    awful.key({ modkey, "Shift" }, "l",
+        function ()
+            awful.util.spawn("xscreensaver-command -lock")
+        end),
     awful.key({ modkey,           }, "s",      hotkeys_popup.show_help,
               {description = "show help", group="awesome"}),
     -- Tag browsing
@@ -274,24 +279,10 @@ globalkeys = my_table.join(
               {description = "go back", group = "tag"}),
 
     -- Non-empty tag browsing
-    awful.key({ altkey }, "Left", function () lain.util.tag_view_nonempty(-1) end,
+    awful.key({ altkey , "Control" }, "h", function () lain.util.tag_view_nonempty(-1) end,
               {description = "view  previous nonempty", group = "tag"}),
-    awful.key({ altkey }, "Right", function () lain.util.tag_view_nonempty(1) end,
+    awful.key({ altkey , "Control" }, "l", function () lain.util.tag_view_nonempty(1) end,
               {description = "view  previous nonempty", group = "tag"}),
-
-    -- Default client focus
-    awful.key({ altkey,           }, "j",
-        function ()
-            awful.client.focus.byidx( 1)
-        end,
-        {description = "focus next by index", group = "client"}
-    ),
-    awful.key({ altkey,           }, "k",
-        function ()
-            awful.client.focus.byidx(-1)
-        end,
-        {description = "focus previous by index", group = "client"}
-    ),
 
     -- By direction client focus
     awful.key({ modkey }, "j",
@@ -320,6 +311,23 @@ globalkeys = my_table.join(
         {description = "focus right", group = "client"}),
     awful.key({ modkey,           }, "w", function () awful.util.mymainmenu:show() end,
               {description = "show main menu", group = "awesome"}),
+
+    -- Alt-Tab client focus
+    awful.key({ altkey }, "Tab",
+        function ()
+            awful.client.focus.byidx(1)
+            if client.focus then
+                client.focus:raise()
+            end
+        end),
+
+    awful.key({ altkey, "Shift" }, "Tab",
+        function ()
+            awful.client.focus.byidx(-1)
+            if client.focus then
+                client.focus:raise()
+            end
+        end),
 
     -- Layout manipulation
     awful.key({ modkey, "Shift"   }, "j", function () awful.client.swap.byidx(  1)    end,
@@ -413,8 +421,6 @@ globalkeys = my_table.join(
     -- Widgets popups
     awful.key({ altkey, }, "c", function () if beautiful.cal then beautiful.cal.show(7) end end,
               {description = "show calendar", group = "widgets"}),
-    awful.key({ altkey, }, "h", function () if beautiful.fs then beautiful.fs.show(7) end end,
-              {description = "show filesystem", group = "widgets"}),
     awful.key({ altkey, }, "w", function () if beautiful.weather then beautiful.weather.show(7) end end,
               {description = "show weather", group = "widgets"}),
 
@@ -427,13 +433,13 @@ globalkeys = my_table.join(
     -- ALSA volume control
     awful.key({ altkey }, "Up",
         function ()
-            os.execute(string.format("amixer -q set %s 1%%+", beautiful.volume.channel))
+            os.execute(string.format("amixer set %s 5%%+", beautiful.volume.channel))
             beautiful.volume.update()
         end,
         {description = "volume up", group = "hotkeys"}),
     awful.key({ altkey }, "Down",
         function ()
-            os.execute(string.format("amixer -q set %s 1%%-", beautiful.volume.channel))
+            os.execute(string.format("amixer set %s 5%%-", beautiful.volume.channel))
             beautiful.volume.update()
         end,
         {description = "volume down", group = "hotkeys"}),
@@ -514,7 +520,7 @@ globalkeys = my_table.join(
               {description = "show the menubar", group = "launcher"})
     --]]
     --[[ dmenu
-    awful.key({ modkey }, "x", function ()
+    awful.key({ modkey }, "r", function ()
             os.execute(string.format("dmenu_run -i -fn 'Monospace' -nb '%s' -nf '%s' -sb '%s' -sf '%s'",
             beautiful.bg_normal, beautiful.fg_normal, beautiful.bg_focus, beautiful.fg_focus))
         end,
@@ -675,11 +681,14 @@ awful.rules.rules = {
 
     -- Titlebars
     { rule_any = { type = { "dialog", "normal" } },
-      properties = { titlebars_enabled = true } },
+      properties = { titlebars_enabled = false } },
 
-    -- Set Firefox to always map on the first tag on screen 1.
-    { rule = { class = "Firefox" },
-      properties = { screen = 1, tag = awful.util.tagnames[1] } },
+    -- Set Firefox to always map on the second tag on screen 1.
+    { rule = { class = "firefox" },
+      properties = { screen = 1, tag = awful.screen.focused().tags[2] } },
+
+    { rule = { class = "skypeforlinux" },
+      properties = { screen = 1, tag = awful.screen.focused().tags[3] } },
 
     { rule = { class = "Gimp", role = "gimp-image-window" },
           properties = { maximized = true } },
